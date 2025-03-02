@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload Images & Videos</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            background: linear-gradient(45deg, #0f0c29, #302b63, #24243e);
+            color: white;
+            text-align: center;
+        }
+        .container {
+            width: 100%;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.8);
+            box-shadow: 0px 0px 20px rgba(0, 255, 255, 0.7);
+        }
+        .upload-section {
+            position: relative;
+            display: inline-block;
+            margin-bottom: 20px;
+        }
+        #mediaUpload {
+            opacity: 0;
+            width: 200px;
+            height: 50px;
+            position: absolute;
+            top: 0;
+            left: 0;
+            cursor: pointer;
+        }
+        .custom-upload {
+            display: inline-block;
+            background: linear-gradient(45deg, cyan, #00d4ff);
+            color: black;
+            padding: 15px 30px;
+            border-radius: 5px;
+            font-weight: bold;
+            box-shadow: 0px 0px 15px cyan;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .custom-upload:hover {
+            box-shadow: 0px 0px 25px cyan;
+        }
+        .media-list {
+            margin-top: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+        }
+        .media-item {
+            border: 2px solid cyan;
+            padding: 10px;
+            position: relative;
+            border-radius: 10px;
+            background: rgba(0, 255, 255, 0.2);
+            box-shadow: 0px 0px 10px cyan;
+            cursor: pointer;
+            transition: transform 0.3s;
+        }
+        .media-item:hover {
+            transform: scale(1.1);
+        }
+        img, video {
+            max-width: 200px;
+            display: block;
+            border-radius: 5px;
+        }
+        .delete-btn {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: red;
+            color: white;
+            border: none;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 5px;
+        }
+        .fullscreen-container {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.9);
+            align-items: center;
+            justify-content: center;
+        }
+        .fullscreen-image {
+            max-width: 90%;
+            max-height: 90%;
+            box-shadow: 0px 0px 20px cyan;
+        }
+        .nav-button {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(0,255,255,0.7);
+            border: none;
+            padding: 10px;
+            cursor: pointer;
+            font-size: 20px;
+        }
+        .prev { left: 10px; }
+        .next { right: 10px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Upload Images & Videos</h2>
+        <div class="upload-section">
+            <label class="custom-upload">Choose File
+                <input type="file" id="mediaUpload" accept="image/*,video/*" multiple>
+            </label>
+            <button class="custom-upload" onclick="uploadMedia()">Upload</button>
+        </div>
+        
+        <h2>Uploaded Media</h2>
+        <div class="media-list" id="mediaList"></div>
+    </div>
+
+    <div class="fullscreen-container" id="fullscreenContainer" onclick="closeFullscreen()">
+        <button class="nav-button prev" onclick="prevImage(event)">&lt;</button>
+        <img id="fullscreenImage" class="fullscreen-image">
+        <button class="nav-button next" onclick="nextImage(event)">&gt;</button>
+    </div>
+
+    <script>
+        let mediaFiles = [];
+        let currentIndex = 0;
+
+        function uploadMedia() {
+            const files = document.getElementById('mediaUpload').files;
+            for (let file of files) {
+                const fileURL = URL.createObjectURL(file);
+                const fileName = file.name.length > 15 ? file.name.substring(0, 12) + '...' : file.name;
+                mediaFiles.push({ id: Date.now() + Math.random(), url: fileURL, type: file.type, name: fileName });
+            }
+            displayMedia();
+        }
+
+        function displayMedia() {
+            const list = document.getElementById('mediaList');
+            list.innerHTML = '';
+            mediaFiles.forEach((media, index) => {
+                list.innerHTML += `
+                    <div class="media-item" onclick="openFullscreen(${index})">
+                        <div class="title">${media.name}</div>
+                        ${media.type.startsWith('image') ? `<img src="${media.url}">` : `<video src="${media.url}" controls></video>`}
+                        <button class="delete-btn" onclick="deleteMedia(event, ${index})">X</button>
+                    </div>`;
+            });
+        }
+
+        function deleteMedia(event, index) {
+            event.stopPropagation();
+            mediaFiles.splice(index, 1);
+            displayMedia();
+        }
+
+        function openFullscreen(index) {
+            currentIndex = index;
+            document.getElementById('fullscreenImage').src = mediaFiles[index].url;
+            document.getElementById('fullscreenContainer').style.display = 'flex';
+        }
+
+        function closeFullscreen() {
+            document.getElementById('fullscreenContainer').style.display = 'none';
+        }
+
+        function prevImage(event) {
+            event.stopPropagation();
+            currentIndex = (currentIndex - 1 + mediaFiles.length) % mediaFiles.length;
+            document.getElementById('fullscreenImage').src = mediaFiles[currentIndex].url;
+        }
+
+        function nextImage(event) {
+            event.stopPropagation();
+            currentIndex = (currentIndex + 1) % mediaFiles.length;
+            document.getElementById('fullscreenImage').src = mediaFiles[currentIndex].url;
+        }
+    </script>
+</body>
+</html>
